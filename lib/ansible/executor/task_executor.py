@@ -588,7 +588,14 @@ class TaskExecutor:
         while time_left > 0:
             time.sleep(self._task.poll)
 
-            async_result = normal_handler.run(task_vars=task_vars)
+            try:
+                async_result = normal_handler.run(task_vars=task_vars)
+            except AnsibleConnectionFailure as e:
+                # set the result to an empty dict to avoid errors below
+                async_result = dict(
+                  msg="async check failed due to system being unreachable: %s" % e,
+                )
+
             # We do not bail out of the loop in cases where the failure
             # is associated with a parsing error. The async_runner can
             # have issues which result in a half-written/unparseable result
@@ -596,6 +603,9 @@ class TaskExecutor:
             # before it's time to timeout.
             if int(async_result.get('finished', 0)) == 1 or ('failed' in async_result and async_result.get('_ansible_parsed', False)) or 'skipped' in async_result:
                 break
+
+            async_result.update(dict(_ansible_retry=True, retries=time_left, attempts=self._task.poll))
+            self._rslt_q.put(TaskResult(self._host.name, self._task._uuid, async_result), block=False)
 
             time_left -= self._task.poll
 
