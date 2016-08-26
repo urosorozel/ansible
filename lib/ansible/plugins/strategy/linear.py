@@ -181,7 +181,9 @@ class StrategyModule(StrategyBase):
                 any_errors_fatal = False
 
                 results = []
+                items_to_queue = []
                 for (host, task) in host_tasks:
+
                     if not task:
                         continue
 
@@ -252,7 +254,8 @@ class StrategyModule(StrategyBase):
                             display.debug("sending task start callback")
 
                         self._blocked_hosts[host.get_name()] = True
-                        self._queue_task(host, task, task_vars, play_context)
+                        #self._queue_task(host, task, task_vars, play_context)
+                        items_to_queue.append((host, task, task_vars))
                         del task_vars
 
                     # if we're bypassing the host loop, break out now
@@ -260,6 +263,8 @@ class StrategyModule(StrategyBase):
                         break
 
                     results += self._process_pending_results(iterator, one_pass=True)
+
+                self._tqm.queue_multiple_tasks(items_to_queue, play_context)
 
                 # go to next host/task group
                 if skip_rest:
