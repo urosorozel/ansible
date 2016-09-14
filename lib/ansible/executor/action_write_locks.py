@@ -20,6 +20,7 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 from multiprocessing import Lock
+from multiprocessing.util import register_after_fork
 from ansible.module_utils.facts import Facts
 
 if 'action_write_locks' not in globals():
@@ -39,5 +40,7 @@ if 'action_write_locks' not in globals():
     mods = set(p['name'] for p in Facts.PKG_MGRS)
     mods.update(('copy', 'file', 'setup', 'slurp', 'stat'))
     for mod_name in mods:
-        action_write_locks[mod_name] = Lock()
+        l = Lock()
+        action_write_locks[mod_name] = l
+        register_after_fork(l, l.release)
 

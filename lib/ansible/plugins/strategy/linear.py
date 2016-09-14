@@ -275,7 +275,8 @@ class StrategyModule(StrategyBase):
                     if self._pending_results > 0:
                         results += self._process_pending_results(iterator, one_pass=True)
 
-                self._tqm.queue_multiple_tasks(items_to_queue, play_context)
+                if len(items_to_queue) > 0:
+                    self._tqm.queue_multiple_tasks(items_to_queue, play_context)
 
                 # go to next host/task group
                 if skip_rest:
