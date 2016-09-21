@@ -79,8 +79,9 @@ class HostVars(collections.Mapping):
         if sha1_hash in self._cached_result:
             result = self._cached_result[sha1_hash]
         else:
-            templar = Templar(variables=data, loader=self._loader)
-            result = templar.template(data, fail_on_undefined=False, static_vars=STATIC_VARS)
+            #templar = Templar(variables=data, loader=self._loader)
+            #result = templar.template(data, fail_on_undefined=False, static_vars=STATIC_VARS)
+            result = data
             self._cached_result[sha1_hash] = result
         return result
 
