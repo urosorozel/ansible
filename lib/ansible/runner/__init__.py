@@ -15,9 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
+# This file is patched.  See https://github.com/ansible/ansible/pull/15386/files
+
 import multiprocessing
 import signal
 import os
+import re
 import pwd
 import Queue
 import random
@@ -1263,7 +1266,9 @@ class Runner(object):
         else:
             sudoable = False
         data = self._low_level_exec_command(conn, cmd, tmp, sudoable=sudoable)
-        data2 = utils.last_non_blank_line(data['stdout'])
+        if data.get('stdout','').strip().startswith('BECOME-SUCCESS-'):
+            data['stdout'] = re.sub(r'^((\r)?\n)?BECOME-SUCCESS.*(\r)?\n', '', data['stdout'])
+        data2 = data['stdout'].splitlines()[0]
         try:
             if data2 == '':
                 # this may happen if the connection to the remote server
