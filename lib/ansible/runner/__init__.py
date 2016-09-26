@@ -1259,6 +1259,13 @@ class Runner(object):
         else:
             sudoable = False
         data = self._low_level_exec_command(conn, cmd, tmp, sudoable=sudoable)
+        # NOTE(cfarquhar): This is a horrible hack, but ansible 1.9.4-1 is broken with no hopes of a quick resolution.
+        # This should gets us around a very intermittent issue until we move to Ansible 2.1.x in Newton
+        for x in range(1,10):
+            if data['stdout'] == '':
+                data = self._low_level_exec_command(conn, cmd, tmp, sudoable=sudoable)
+            else:
+                break
         data2 = utils.last_non_blank_line(data['stdout'])
         try:
             if data2 == '':
